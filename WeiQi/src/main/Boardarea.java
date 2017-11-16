@@ -13,8 +13,8 @@ public class Boardarea extends JPanel {
 	};
 
 	private ArrayList<Chess> chesses;
-	private PositionState[][] board = new PositionState[20][20];
-	private int grid = 40;
+	private PositionState[][] board;
+	private int grid;
 	private boolean player1 = true;
 
 	public boolean getPlyaer() {
@@ -34,7 +34,11 @@ public class Boardarea extends JPanel {
 	}
 
 	public PositionState getPositionState(int x, int y) {
-		return board[x][y];
+		if (x < 1 || x > 20 || y < 1 || y > 20) {
+			return PositionState.BLACK;
+		} else {
+			return board[x][y];
+		}
 	}
 
 	public int locate(int a) {
@@ -45,11 +49,23 @@ public class Boardarea extends JPanel {
 		return locate(a) / grid + 1;
 	}
 
+	public boolean boardCheck(int x, int y) {
+		if (x < grid * 20 && x > grid && y < grid * 20 && y > grid) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
 	public void draw(Graphics g, int x, int y) {
-		g.fillOval(locate(x), locate(y), getGrid(), getGrid());
+		g.fillOval(locate(x), locate(y), grid, grid);
 	}
 
 	public Boardarea() {
+		grid = 40;
+		board = new PositionState[20][20];
+		chesses = new ArrayList<>(1024);
 		for (int i = 1; i < 20; i++) {
 			for (int j = 1; j < 20; j++) {
 				setPositionState(PositionState.EMPTY, i, j);
@@ -62,7 +78,6 @@ public class Boardarea extends JPanel {
 	}
 
 	public void paint(Graphics g) {
-		chesses = new ArrayList<>(1024);
 		for (int i = grid; i < grid * 20; i = i + grid) {
 			g.drawLine(i, grid, i, grid * 19);
 			g.drawLine(grid, i, grid * 19, i);
@@ -80,7 +95,7 @@ public class Boardarea extends JPanel {
 		public void mouseDragged(MouseEvent e) {
 			Graphics g = getGraphics();
 			g.setColor(getBackground());
-			if (getPositionState(transform(x), transform(y)) == PositionState.EMPTY) {
+			if (boardCheck(e.getX(), e.getY()) && getPositionState(transform(x), transform(y)) == PositionState.EMPTY) {
 				draw(g, x, y);
 				g.setColor(Color.BLACK);
 				g.drawLine(locate(x), locate(y) + grid / 2, locate(x) + grid, locate(y) + grid / 2);
@@ -118,8 +133,10 @@ public class Boardarea extends JPanel {
 
 		@Override
 		public void mousePressed(MouseEvent e) {
-			x = e.getX();
-			y = e.getY();
+			if (boardCheck(e.getX(), e.getY())) {
+				x = e.getX();
+				y = e.getY();
+			}
 
 		}
 
@@ -128,9 +145,11 @@ public class Boardarea extends JPanel {
 			Graphics g = getGraphics();
 			x = e.getX();
 			y = e.getY();
-			current = new Chess(Boardarea.this, x, y);
-			current.drop(g);
-			chesses.add(current);
+			if (boardCheck(x, y) && getPositionState(transform(x), transform(y)) == PositionState.EMPTY) {
+				current = new Chess(Boardarea.this, x, y);
+				current.drop(g);
+				chesses.add(current);
+			}
 
 		}
 
